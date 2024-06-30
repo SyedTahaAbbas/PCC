@@ -3,7 +3,7 @@ import { RENDER_VERT, RENDER_FRAG } from "./shaderSource.js"
 import Olon, { Data } from "https://cdn.jsdelivr.net/npm/olon@0.0.0/src/Olon.js"
 import { random, floor, min } from "./tools.js"
 
-const MAX_AMOUNT = 100000
+const MAX_AMOUNT = 10000
 const MIN_AGE = 1.01
 const MAX_AGE = 2.15
 const BIRTH_RATE = 0.5
