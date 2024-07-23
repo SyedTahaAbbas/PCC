@@ -1,6 +1,7 @@
 import { UPDATE_VERT, UPDATE_FRAG } from "./shader.js"
 import { RENDER_VERT, RENDER_FRAG } from "./shader.js"
-import Olon, { Data } from "https://cdn.jsdelivr.net/npm/olon@0.0.0/src/Olon.js"
+//import Olon, { Data } from "https://cdn.jsdelivr.net/npm/olon@0.0.0/src/Olon.js"
+import Olon, { Data } from "./olon.js"
 import { random, floor, min } from "./tool.js"
 
 const MAX_AMOUNT = 500000
