@@ -25,7 +25,8 @@ const aPosition = { name: "aPosition", unit: "f32", size: 2 }
 const aAge = { name: "aAge", unit: "f32", size: 1 }
 const aLife = { name: "aLife", unit: "f32", size: 1 }
 const aVel = { name: "aVel", unit: "f32", size: 2 }
-const attributes = [aPosition, aAge, aLife, aVel]
+const aColor = { name: "aColor", unit: "f32", size: 3 }; // Adding color
+const attributes = [aPosition, aAge, aLife, aVel, aColor]
 
 const particleData = []
 for (let i = 0; i < MAX_AMOUNT; i++) {
@@ -34,11 +35,15 @@ for (let i = 0; i < MAX_AMOUNT; i++) {
 	particleData.push(life + 1) // aAge
 	particleData.push(life) // aLife
 	particleData.push(0, 0) // aVel
+	particleData.push(0, 0, 0); // aColor (RGB)
 }
 const initData = Data(particleData)
 
 const buffer0 = ol.createBuffer(initData, ol.STREAM_DRAW)
 const buffer1 = ol.createBuffer(initData, ol.STREAM_DRAW)
+
+// Update stride calculation to include color
+const stride = 4 * (2 + 1 + 1 + 2 + 3);
 
 const vao0 = ol.createVAO(updateProgram, {
 	buffer: buffer0,

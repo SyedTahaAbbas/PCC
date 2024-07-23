@@ -11,11 +11,13 @@ export const UPDATE_VERT = `
 	in float aAge;
 	in float aLife;
 	in vec2 aVel;
+	in vec3 aColor;
 
 	out vec2 vPosition;
 	out float vAge;
 	out float vLife;
 	out vec2 vVel;
+	out vec3 vColor;
 
 	${Shox.noiseMath}
 	${Shox.snoise3D}
@@ -36,12 +38,14 @@ export const UPDATE_VERT = `
 			vAge = 0.;
 			vLife = aLife;
 			vVel = vPosition;
+			vColor = aColor;
 		} else {
 			vec2 force = 3.*(2.*noise.rg-1.);
 			vPosition = aPosition+aVel*uTimeDelta;
 			vAge = aAge+uTimeDelta;
 			vLife = aLife;
 			vVel = .95*aVel+force*uTimeDelta*3.;
+			vColor = aColor;
 		}
 	}
 `
@@ -58,17 +62,21 @@ export const RENDER_VERT = `
 	in vec4 aPosition;
 	in float aAge;
 	in float aLife;
+	in vec3 aColor;
 
 	out vec4 vPosition;
 	out float vAge;
 	out float vLife;
+	out vec3 vColor;
 
 	void main() {
 		vPosition = aPosition;
 		vAge = aAge;
 		vLife = aLife;
+		vColor = aColor;
 		gl_PointSize = 1.*(1.-aAge/aLife);
 		gl_Position = aPosition;
+
 	}
 `
 
@@ -77,9 +85,10 @@ export const RENDER_FRAG = `
 
 	in float vAge;
 	in float vLife;
+	in vec3 vColor;
 
 	out vec4 fragColor;
 	void main() {
-		fragColor = vec4(1.-2.*vAge/vLife);
+		fragColor = vec4(vColor,1.0);
 	}
 `
