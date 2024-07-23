@@ -1,4 +1,4 @@
-import * as Shox from "https://cdn.jsdelivr.net/npm/shox@1.1.0/src/Shox.js"
+import * as Shox from "https://cdn.jsdelivr.net/npm/shox@1.1.0/src/Shox.js";
 
 export const UPDATE_VERT = `
 	precision mediump float;
@@ -25,36 +25,36 @@ export const UPDATE_VERT = `
 
 	void main() {
 		vec2 noise = vec2(
-			.5+.5*snoise(vec3(vec2(aPosition*10.+200.), uTime*.5)),
-			.5+.5*snoise(vec3(vec2(aPosition*10.+100.), uTime*.5))
+			0.5 + 0.5 * snoise(vec3(vec2(aPosition * 10.0 + 200.0), uTime * 0.5)),
+			0.5 + 0.5 * snoise(vec3(vec2(aPosition * 10.0 + 100.0), uTime * 0.5))
 		);
 
 		if (aAge >= aLife) {
-			ivec2 coord = ivec2(gl_VertexID%512, gl_VertexID/512);
+			ivec2 coord = ivec2(gl_VertexID % 512, gl_VertexID / 512);
 			vec2 rand = hash22(vec2(coord));
-			float posX = snoise(vec3(rand+vec2(uRandom.x), -uTime*.1+noise.x*.1));
-			float posY = snoise(vec3(rand-vec2(uRandom.y),  uTime*.1+noise.y*.1));
-			vPosition = .75*vec2(posX, posY);
-			vAge = 0.;
+			float posX = snoise(vec3(rand + vec2(uRandom.x), -uTime * 0.1 + noise.x * 0.1));
+			float posY = snoise(vec3(rand - vec2(uRandom.y), uTime * 0.1 + noise.y * 0.1));
+			vPosition = 0.75 * vec2(posX, posY);
+			vAge = 0.0;
 			vLife = aLife;
 			vVel = vPosition;
 			vColor = aColor;
 		} else {
-			vec2 force = 3.*(2.*noise.rg-1.);
-			vPosition = aPosition+aVel*uTimeDelta;
-			vAge = aAge+uTimeDelta;
+			vec2 force = 3.0 * (2.0 * noise - 1.0);
+			vPosition = aPosition + aVel * uTimeDelta;
+			vAge = aAge + uTimeDelta;
 			vLife = aLife;
-			vVel = .95*aVel+force*uTimeDelta*3.;
+			vVel = 0.95 * aVel + force * uTimeDelta * 3.0;
 			vColor = aColor;
 		}
 	}
-`
+`;
 
 export const UPDATE_FRAG = `
 	precision mediump float;
 	in float vAge;
 	void main() { discard; }
-`
+`;
 
 export const RENDER_VERT = `
 	precision mediump float;
@@ -74,11 +74,10 @@ export const RENDER_VERT = `
 		vAge = aAge;
 		vLife = aLife;
 		vColor = aColor;
-		gl_PointSize = 1.*(1.-aAge/aLife);
+		gl_PointSize = 1.0 * (1.0 - aAge / aLife);
 		gl_Position = aPosition;
-
 	}
-`
+`;
 
 export const RENDER_FRAG = `
 	precision mediump float;
@@ -89,6 +88,6 @@ export const RENDER_FRAG = `
 
 	out vec4 fragColor;
 	void main() {
-		fragColor = vec4(vColor,1.0);
+		fragColor = vec4(vColor, 1.0);
 	}
-`
+`;
