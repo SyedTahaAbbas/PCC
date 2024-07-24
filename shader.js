@@ -6,6 +6,7 @@ export const UPDATE_VERT = `
 	uniform float uTimeDelta;
 	uniform float uTime;
 	uniform vec2 uRandom;
+	uniform vec2 uMouse; // Add uniform for mouse coordinates
 
 	in vec2 aPosition;
 	in float aAge;
@@ -41,10 +42,16 @@ export const UPDATE_VERT = `
 			vColor = aColor;
 		} else {
 			vec2 force = 3.0 * (2.0 * noise - 1.0);
+		
+			// Calculate direction to mouse and apply it as a force
+			vec2 dirToMouse = normalize(uMouse - aPosition);
+			float distToMouse = length(uMouse - aPosition);
+			vec2 mouseForce = dirToMouse * min(1.0, 1.0 / distToMouse); // Apply a force based on the distance to the mouse
+
 			vPosition = aPosition + aVel * uTimeDelta;
 			vAge = aAge + uTimeDelta;
 			vLife = aLife;
-			vVel = 0.95 * aVel + force * uTimeDelta * 3.0;
+			vVel = 0.95 * aVel + (force + mouseForce) * uTimeDelta * 3.0; // Combine forces
 			vColor = aColor;
 		}
 	}

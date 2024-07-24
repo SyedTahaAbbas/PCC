@@ -74,13 +74,18 @@ ol.render(() => {
 	ol.clearColor(0, 0, 0, 0.25)
 	ol.clearDepth()
 
+	// Access mouse coordinates
+	const [mouseX, mouseY] = ol.mouse;
+
 	ol.use({ program: updateProgram }).run(() => {
+		ol.uniform("uTimeDelta", timeDelta);
+		ol.uniform("uTime", time);
+		ol.uniform("uMouse", [mouseX, mouseY]); // Pass mouse coordinates to shader
+	
 		ol.transformFeedback(vaos[read], buffers[write], ol.POINTS, () => {
-			ol.uniform("uTimeDelta", timeDelta)
-			ol.uniform("uTime", time)
-			ol.points(0, bornAmount)
-		})
-	})
+		  	ol.points(0, bornAmount);
+		});
+	});
 
 	ol.use({
 		program: renderProgram,

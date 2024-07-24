@@ -4,229 +4,256 @@ import loadImage from "./loadImage.js";
 import Data from "./Data.js";
 
 export { loadShader, loadImage, Data };
+
 class Olon {
     constructor(width = 300, height = 150) {
-      this.frame = 0;
-      this.seconds = 0;
-      this.startTime = 0;
-      this.currentTime = performance.now();
-      this.lastFrameTime = performance.now();
-      this.fps = 60;
-      this.oMouseX = 0;
-      this.oMouseY = 0;
-      this.mouseX = 0;
-      this.mouseY = 0;
-  
-      this.bufferList = {};
-  
-      this.canvas2D = null;
-      this.o2D = null;
-  
-      this.canvas = document.createElement("canvas");
-      [this.canvas.width, this.canvas.height] = [width, height];
-      this.canvas.id = "olon-canvas";
-      document.body.appendChild(this.canvas);
-  
-      this.gl = this.canvas.getContext("webgl2");
-      this.program = null;
-  
-      // Blend constants
-      this.BLEND_MODE = this.gl.FUNC_ADD;
-      this.BLEND_SFAC = this.gl.ONE;
-      this.BLEND_DFAC = this.gl.ZERO;
-  
-      // Event listeners
-      this.canvas.addEventListener("mousemove", (e) =>
-        this._mouseMove(e, this.canvas)
-      );
-      this.canvas.addEventListener("touchmove", (e) =>
-        this._touchMove(e, this.canvas)
-      );
-  
-      // Type mappings
-      this.UnitMap = TypeMaps.Unit;
-      this.IFormatMap = TypeMaps.IFormat;
-      this.UniformMap = TypeMaps.Uniform(this.gl);
+        this.frame = 0;
+        this.seconds = 0;
+        this.startTime = 0;
+        this.currentTime = performance.now();
+        this.lastFrameTime = performance.now();
+        this.fps = 60;
+        this.oMouseX = 0;
+        this.oMouseY = 0;
+        this.mouseX = 0;
+        this.mouseY = 0;
+
+        this.bufferList = {};
+
+        this.canvas2D = null;
+        this.o2D = null;
+
+        this.canvas = document.createElement("canvas");
+        [this.canvas.width, this.canvas.height] = [width, height];
+        this.canvas.id = "olon-canvas";
+        document.body.appendChild(this.canvas);
+
+        this.gl = this.canvas.getContext("webgl2");
+        this.program = null;
+
+        // Blend constants
+        this.BLEND_MODE = this.gl.FUNC_ADD;
+        this.BLEND_SFAC = this.gl.ONE;
+        this.BLEND_DFAC = this.gl.ZERO;
+
+        // Event listeners
+        this.canvas.addEventListener("mousemove", (e) =>
+            this._mouseMove(e, this.canvas)
+        );
+        this.canvas.addEventListener("touchmove", (e) =>
+            this._touchMove(e, this.canvas)
+        );
+        
+        // Add click event listener to restart rendering
+        this.canvas.addEventListener("click", () => this.restartRendering());
+
+        // Type mappings
+        this.UnitMap = TypeMaps.Unit;
+        this.IFormatMap = TypeMaps.IFormat;
+        this.UniformMap = TypeMaps.Uniform(this.gl);
+
+        // Initialize renderFunc to null
+        this.renderFunc = null;
     }
-  
+    
     sketchData() {
         const positionData = Data([-1, -1, 1, -1, 1, 1, 1, 1, -1, 1, -1, -1]);
         const texCoordData = Data([0, 0, 1, 0, 1, 1, 1, 1, 0, 1, 0, 0]);
         return { positionData, texCoordData };
-      }
-      
-      sketch() {
+    }
+
+    sketch() {
         const { positionData, texCoordData } = this.sketchData();
         this.setAttribute("aPosition", positionData, "f32", 2);
         this.setAttribute("aTexCoord", texCoordData, "f32", 2);
-      }
+    }
 
-      fullscreen() {
+    fullscreen() {
         const { left, top } = this._getBorderSize(this.canvas);
         this.width = window.innerWidth - left * 2;
         this.height = window.innerHeight - top * 2;
         window.addEventListener("resize", () => {
-          const { left, top } = this._getBorderSize(this.canvas);
-          this.width = window.innerWidth - left * 2;
-          this.height = window.innerHeight - top * 2;
+            const { left, top } = this._getBorderSize(this.canvas);
+            this.width = window.innerWidth - left * 2;
+            this.height = window.innerHeight - top * 2;
         });
-      }
-      
-      enableCanvas2D(color = "#000000") {
+    }
+
+    enableCanvas2D(color = "#000000") {
         this.canvas2D = document.createElement("canvas");
         [this.canvas2D.width, this.canvas2D.height] = [
-          this.canvas.width,
-          this.canvas.height,
+            this.canvas.width,
+            this.canvas.height,
         ];
         this.canvas2D.id = "o2d";
         document.body.appendChild(this.canvas2D);
         this.o2D = this.canvas2D.getContext("2d");
-      
+
         this.o2D.fillStyle = color;
         this.o2D.fillRect(0, 0, this.canvas2D.width, this.canvas2D.height);
-      
+
         this.canvas.style.display = "none";
-      
+
         this.canvas2D.addEventListener("mousemove", (e) =>
-          this._mouseMove(e, this.canvas2D)
+            this._mouseMove(e, this.canvas2D)
         );
         this.canvas2D.addEventListener("touchmove", (e) =>
-          this._touchMove(e, this.canvas2D)
+            this._touchMove(e, this.canvas2D)
         );
-      }
+    }
 
-      render(renderFunc) {
+    render(renderFunc) {
+        this.renderFunc = renderFunc; // Assign renderFunc to a class property
+
         const animate = (timestamp) => {
-          this.frame++;
-          this.timestamp = timestamp;
-          this.currentTime = performance.now();
-          this.seconds = (this.currentTime - this.startTime) / 1000;
-          this.fps = 1000 / (this.currentTime - this.lastFrameTime);
-      
-          renderFunc();
-      
-          if (this.canvas2D) this.o2D.drawImage(this.canvas, 0, 0);
-      
-          this.lastFrameTime = this.currentTime;
-          requestAnimationFrame(animate);
+            this.frame++;
+            this.timestamp = timestamp;
+            this.currentTime = performance.now();
+            this.seconds = (this.currentTime - this.startTime) / 1000;
+            this.fps = 1000 / (this.currentTime - this.lastFrameTime);
+
+            renderFunc();
+
+            if (this.canvas2D) this.o2D.drawImage(this.canvas, 0, 0);
+
+            this.lastFrameTime = this.currentTime;
+            this.animationFrame = requestAnimationFrame(animate);
         };
-      
+
         this.startTime = performance.now();
-        requestAnimationFrame(animate);
-      }
+        this.animationFrame = requestAnimationFrame(animate);
+    }
 
-      use(
+    restartRendering() {
+        // Reset state
+        this.frame = 0;
+        this.seconds = 0;
+        this.startTime = performance.now();
+        this.lastFrameTime = performance.now();
+
+        // Cancel current animation frame
+        if (this.animationFrame) {
+            cancelAnimationFrame(this.animationFrame);
+        }
+
+        // Restart rendering with the stored render function
+        if (this.renderFunc) {
+            this.render(this.renderFunc);
+        }
+    }
+
+    use(
         {
-          program = null,
-          VAO = null,
-          FBO = null,
-          RBO = null,
-          texture2D = null,
-          buffer = null,
-          Depth = false,
-          Blend = false,
+            program = null,
+            VAO = null,
+            FBO = null,
+            RBO = null,
+            texture2D = null,
+            buffer = null,
+            Depth = false,
+            Blend = false,
         } = { program, VAO, FBO, RBO, texture2D, Depth, Blend }
-      ) {
+    ) {
         return {
-          run: (callback) => {
-            if (program) this.useProgram(program);
-            if (VAO) this.bindVAO(VAO);
-            if (FBO) this.bindFBO(FBO);
-            if (RBO) this.bindRBO(RBO);
-            if (texture2D) this.bindTexture2D(texture2D);
-            if (buffer) this.bindBuffer(buffer);
-            if (Depth) this.enableDepth();
-            if (Blend) this.enableBlend();
-            callback();
-            if (Blend) this.disableBlend();
-            if (Depth) this.disableDepth();
-            if (buffer) this.unbindBuffer();
-            if (texture2D) this.unbindTexture2D();
-            if (RBO) this.unbindRBO();
-            if (FBO) this.unbindFBO();
-            if (VAO) this.unbindVAO();
-          },
+            run: (callback) => {
+                if (program) this.useProgram(program);
+                if (VAO) this.bindVAO(VAO);
+                if (FBO) this.bindFBO(FBO);
+                if (RBO) this.bindRBO(RBO);
+                if (texture2D) this.bindTexture2D(texture2D);
+                if (buffer) this.bindBuffer(buffer);
+                if (Depth) this.enableDepth();
+                if (Blend) this.enableBlend();
+                callback();
+                if (Blend) this.disableBlend();
+                if (Depth) this.disableDepth();
+                if (buffer) this.unbindBuffer();
+                if (texture2D) this.unbindTexture2D();
+                if (RBO) this.unbindRBO();
+                if (FBO) this.unbindFBO();
+                if (VAO) this.unbindVAO();
+            },
         };
-      }
+    }
 
-      _getBorderSize(canvas) {
+    _getBorderSize(canvas) {
         const style = window.getComputedStyle(canvas);
         const top = parseFloat(style.borderTopWidth) || 0;
         const left = parseFloat(style.borderLeftWidth) || 0;
         return { top, left };
-      }
-      
-      _updateMouse(canvas, cx, cy) {
+    }
+
+    _updateMouse(canvas, cx, cy) {
         this.oMouseX = cx / canvas.scrollWidth;
         this.oMouseY = cy / canvas.scrollHeight;
         this.oMouseY = canvas.height - this.oMouseY;
-      
+
         this.mouseX = (this.oMouseX / this.width) * 2 - 1;
         this.mouseY = (this.oMouseY / this.height) * 2 - 1;
-      }
-      
-      _mouseMove(e, canvas) {
+    }
+
+    _mouseMove(e, canvas) {
         const cx = e.offsetX * canvas.width;
         const cy = e.offsetY * canvas.height;
         this._updateMouse(canvas, cx, cy);
-      }
-      
-      _touchMove(e, canvas) {
+    }
+
+    _touchMove(e, canvas) {
         e = e.touches ? e.touches[0] : e.changedTouches?.[0];
         const rect = canvas.getBoundingClientRect();
         const { left, top } = this._getBorderSize(canvas);
         const cx = (e.clientX - rect.left - left) * canvas.width;
         const cy = (e.clientY - rect.top - top) * canvas.height;
         this._updateMouse(canvas, cx, cy);
-      }
-      
-      get oMouse() {
+    }
+
+    get oMouse() {
         return [this.oMouseX, this.oMouseY];
-      }
-      
-      get mouse() {
+    }
+
+    get mouse() {
         return [this.mouseX, this.mouseY];
-      }
-      
-      _shader(programObj, source, type) {
+    }
+
+    _shader(programObj, source, type) {
         const shader = this.gl.createShader(type);
         if (!/#version 300 es/.test(source)) source = `#version 300 es\n${source}`;
         source = source.replace(/^\s+/, "");
         this.gl.shaderSource(shader, source);
         this.gl.compileShader(shader);
         this.gl.attachShader(programObj.program, shader);
-      }
-      
-      _processShader(programObj, sources, type) {
+    }
+
+    _processShader(programObj, sources, type) {
         if (Array.isArray(sources))
-          sources.forEach((source) => this._shader(programObj, source, type));
+            sources.forEach((source) => this._shader(programObj, source, type));
         else this._shader(programObj, sources, type);
-      }
-      
-      setShader(vert, frag) {
+    }
+
+    setShader(vert, frag) {
         this.program = this.createProgram(vert, frag);
         this.linkProgram(this.program);
-       this.useProgram(this.program)
-	}
+        this.useProgram(this.program)
+    }
 
-	/////////////////////////////////////////////
-	// PROGRAM //////////////////////////////////
+    /////////////////////////////////////////////
+    // PROGRAM //////////////////////////////////
 
-	setProgram(programObj) {
-		this.program = programObj
-	}
+    setProgram(programObj) {
+        this.program = programObj
+    }
 
-	linkProgram(programObj) {
-		this.setProgram(programObj)
-		this.gl.linkProgram(programObj.program)
-	}
+    linkProgram(programObj) {
+        this.setProgram(programObj)
+        this.gl.linkProgram(programObj.program)
+    }
 
-	useProgram(programObj) {
-		this.setProgram(programObj)
-		this.gl.useProgram(programObj.program)
-	}
+    useProgram(programObj) {
+        this.setProgram(programObj)
+        this.gl.useProgram(programObj.program)
+    }
 
-	_updateProgramUniforms(programObj, name, type, size) {
+    _updateProgramUniforms(programObj, name, type, size) {
 		programObj.uniforms[name] = { type, size }
 	}
 
@@ -918,3 +945,4 @@ class Olon {
 }
 
 export default (width, height) => new Olon(width, height)
+
