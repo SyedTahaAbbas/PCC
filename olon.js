@@ -918,18 +918,3 @@ class Olon {
 }
 
 export default (width, height) => new Olon(width, height)
-
-       
-
-
-
-
-
-
-
-
-
-
-
-
-
